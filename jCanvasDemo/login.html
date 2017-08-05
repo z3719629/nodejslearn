@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="jcanvas.js"></script>
+    <link href="jquery.idcode.css" rel="stylesheet" type="text/css" />
+    <script src="jquery.idcode.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var Block = {
+            instance:function(width, height, z_index){
+                var tipBlock = {};
+                tipBlock.width = width;
+                tipBlock.height = height;
+                tipBlock.blockId = "content";
+                tipBlock.html = "<div id='content' style='position:absolute;'></div>";
+                tipBlock.show = function(left, top) {
+                    var id = '#'+tipBlock.blockId;
+                    $(id).css({
+                        display:'none',
+                        left:left || $(id).css('left'),
+                        top:top || $(id).css('top')
+                    }).fadeIn(1000);
+                };
+                tipBlock.hide = function(left, top) {
+                    $('#content').css({
+                        left:left,
+                        top:top
+                    }).fadeOut(1000);
+                };
+                $('#myCanvasDiv').append($(tipBlock.html).css({
+                    display:'none',
+                    height:height,
+                    width:width,
+                    top:0,
+                    left:0,
+                    'background-color':'rgb(255,0,255)',
+                    'z-index':z_index
+                }));
+                return tipBlock;
+            }
+        };
+        var TipBlock = {
+            instance:function(width, height, tips, z_index) {
+                var tipBlock = Block.instance(width, height, z_index);
+                tipBlock.super = Block.instance(width, height, z_index);
+                tipBlock.tips = tips;
+                tipBlock.show = function() {
+                    tipBlock.super.show(arguments[0], arguments[1]);
+                    $('#'+tipBlock.blockId).html(tipBlock.tips);
+                };
+                return tipBlock;
+            }
+        };
+    </script>
+    <script type="text/javascript">
+    	$(function(){
+    	    var width = 0;
+    	    var height = 0;
+    	    $('<img/>').attr('src', 'images/test.jpg').load(function() {
+                width = this.width;
+                height = this.height;
+                $('#myCanvasDiv').css({
+                    width:1400,
+                    height:800,
+                });
+
+                var tips = TipBlock.instance(100, 100, "tips", 2);
+
+                $('#myCanvas').attr({
+                    'width':width,
+                    'height':height
+                }).addLayer({
+                    type: 'image',
+                    source: 'images/test.jpg',
+                    x: width/2,
+                    y: height/2,
+                    width:width,
+                    height:height,
+                    click:function(layer){
+                        tips.show(layer.event.offsetX,layer.event.offsetY);
+                    },
+
+                })
+                    /*
+                .addLayer({
+                 type: 'arc',
+                 fillStyle: '#69f',
+                 strokeStyle: '#000',
+                 strokeWidth: 2,
+                 x: 250, y: 100,
+                 radius: 50
+                 })*/
+                    .drawLayers();
+
+                //$('#myCanvas').getCanvasImage('jpeg');
+            });
+    		//$.idcode.setCode();
+    		//$("#submitForm").click(function(){
+    		//	alert($.idcode.validateCode());
+    		//});
+
+    	});
+    </script>
+</head>
+<body>
+
+        <div style="margin-top: 10px;"><span style="color: gray;">验证码：</span><span id="idcode" ></span></div>
+         <div style="margin-top: 10px;"><input type="button" value="登  录" class="smy_dl_login" id="submitForm"/></div>
+        <div id="myCanvasDiv" style="position:relative;overflow:auto">
+            <canvas id="myCanvas" style="position:absolute;z-index:0"></canvas>
+        </div>
+
+
+</body>
+</html>
