@@ -9,7 +9,7 @@
     <link href="jquery.idcode.css" rel="stylesheet" type="text/css" />
     <style type="text/css">
     .mouseadd{
-        cursor:pointer;
+        cursor:url("images/curs/Altr_Fsh.cur"),pointer;
     }
     </style>
     <script src="jquery.idcode.js" type="text/javascript"></script>
@@ -108,11 +108,11 @@
     		//});
 
             $("#add").click(function() {
-                $("#myCanvasDiv").addClass("mouseadd");
+                $("body").addClass("mouseadd");
             });
 
             $("#cancel").click(function() {
-                $("#myCanvasDiv").removeClass('mouseadd');
+                $("body").removeClass('mouseadd');
             });
 
     	});
