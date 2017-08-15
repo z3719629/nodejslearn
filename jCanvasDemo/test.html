@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="spine/spine.js"></script>
+    <script type="text/javascript">
+
+
+        $().ready(function () {
+            var User = Spine.Class.sub({
+                init:function(name) {
+                    this.name = name;
+                    return this;
+                }
+            });
+            User.extend({
+
+            });
+            User.include({
+                age:18,
+                info:function() {
+                    return this.name;
+                },
+                setName:function(name) {
+                    this.name = name;
+                }
+            });
+
+            function defineP(obj, attrName, config) {
+                Object.defineProperty(obj, attrName, {
+                    get:config.get,
+                    set:config.set
+                });
+            }
+
+
+            var user = new User('sdfsdf');
+            defineP(user, 'name',{
+                get:function() {
+                    console.log("get");
+                },
+                set:$.proxy(function(val) {
+                    console.log("set: "+val);
+                    $("input,label").each($.proxy(function(i,v) {
+                        if($(v).attr("data-bind") == 'name') {
+                            $(v).val(val);
+                        }
+                    }, this));
+                }, user)
+            });
+            user.setName("GSD");
+            //console.log(user.info());
+
+
+            // 给dom添加input事件
+            $("input,label").each(function(i,v) {
+                if($(v).attr("data-bind") == 'name') {
+                    $(v).on("input", function(e,data) {
+                        $("#label").html($(e.target).val());
+                        user.setName($(e.target).val());
+                    });
+                }
+            });
+
+            $("#button").click(function() {
+
+            });
+        });
+    </script>
+</head>
+<body>
+<canvas id="main" width="800" height="600"></canvas>
+<form>
+    <input id="input" data-bind="name" type="text" />
+    <input id="input2" data-bind="name" type="text" />
+    <label id="label"></label>
+    <input id="button" type="button" value="button" />
+</form>
+
+</body>
+</html>
