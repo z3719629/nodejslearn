@@ -1,83 +1,120 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
     <script type="text/javascript" src="jquery.min.js"></script>
     <script type="text/javascript" src="spine/spine.js"></script>
+    <script type="text/javascript" src="vue.js"></script>
+    <style>
+        input {
+            display:block;
+        }
+        input[type=text] {
+            width:200px;
+            height: 30px;
+            font-size:20px;
+        }
+    </style>
     <script type="text/javascript">
+        String.prototype.add = function(num) {
+            var self = this;
+            if(self == '') self = 0;
+            self = (parseInt(self||0) + parseInt(num||0)).toString();
+            return self;
+        };
+        // (1+智力÷250)×基础魔攻+无视攻击力
 
-
+        //(1+基础智力*(1+智力百分比增加)/250)*(基本独立*(1+独立攻击增加系数)+额定独立)
+        // *(1+基本黄字+追加黄字)*(1+根本爆伤+追加爆伤)*(1+所有攻击力提升)
+        // *(1+技能攻击力)*(1+属强/220)*(1+一般白字+属性白字*(1+属强/220))
+        // *(1+技能等级提升伤害率)*(1+无视防御)
         $().ready(function () {
-            var User = Spine.Class.sub({
-                init:function(name) {
-                    this.name = name;
-                    return this;
-                }
-            });
-            User.extend({
-
-            });
-            User.include({
-                age:18,
-                info:function() {
-                    return this.name;
+            var vm = new Vue({
+                el:'#content',
+                data:{
+                    p: {
+                        // 智力
+                        Int:'',
+                        // 智力百分比增加
+                        IntPersent:'',
+                        // 魔法攻击
+                        Matk:'',
+                        // 属性强化
+                        shuxingqianghua:'',
+                        // 独立攻击
+                        Mduli:'',
+                        //武器精通
+                        wuqijingtong:'',
+                        // 白字
+                        baizi:'',
+                        // 黄字
+                        huangzi:'',
+                        // 爆伤
+                        baoshang:'',
+                        // 所有攻击
+                        suoyougongji:'',
+                        // 技能攻击
+                        jinenggongji:''
+                    },
+                    atkTypes: [
+                        {text:'百分比', value:'baifenbi'},
+                        {text:'独立', value:'duli'},
+                    ],
+                    atkType: 'baifenbi'
                 },
-                setName:function(name) {
-                    this.name = name;
-                }
-            });
-
-            function defineP(obj, attrName, config) {
-                Object.defineProperty(obj, attrName, {
-                    get:config.get,
-                    set:config.set
-                });
-            }
-
-
-            var user = new User('sdfsdf');
-            defineP(user, 'name',{
-                get:function() {
-                    console.log("get");
-                },
-                set:$.proxy(function(val) {
-                    console.log("set: "+val);
-                    $("input,label").each($.proxy(function(i,v) {
-                        if($(v).attr("data-bind") == 'name') {
-                            $(v).val(val);
+                computed: {
+                    //结果
+                    res: function() {
+                        var r = 0;
+                        //(1+基础智力*(1+智力百分比增加)/250)
+                        r += (1 + (this.p.Int * (this.p.IntPersent/100 + 1))/250);
+                        // (基本独立*(1+独立攻击增加系数)+额定独立)
+                        if(this.atkType == 'duli') {
+                            r *= this.p.Mduli;
+                        } else if(this.atkType == 'baifenbi') {
+                            //r * 基础魔攻
+                            r *= this.p.Matk;
                         }
-                    }, this));
-                }, user)
-            });
-            user.setName("GSD");
-            //console.log(user.info());
+                        r *= this.p.baizi||1 * this.p.huangzi||1 * this.p.baoshang||1;
 
+                        return r===0?'':r;
+                    }
+                },
+                methods: {
+                    cacu:function() {
 
-            // 给dom添加input事件
-            $("input,label").each(function(i,v) {
-                if($(v).attr("data-bind") == 'name') {
-                    $(v).on("input", function(e,data) {
-                        $("#label").html($(e.target).val());
-                        user.setName($(e.target).val());
-                    });
+                    }
                 }
-            });
-
-            $("#button").click(function() {
 
             });
         });
     </script>
 </head>
 <body>
-<canvas id="main" width="800" height="600"></canvas>
-<form>
-    <input id="input" data-bind="name" type="text" />
-    <input id="input2" data-bind="name" type="text" />
-    <label id="label"></label>
-    <input id="button" type="button" value="button" />
-</form>
+<div id="content" width="10">
+    <input v-model="p.Int" type="text" placeholder="力量/智力" />
+    <input v-model="p.IntPersent" placeholder="力量/智力百分比增加" type="text" />
+    <template v-if="this.atkType == 'baifenbi'">
+        <input  v-model="p.Matk" placeholder="物理/魔法攻击" type="text" />
+        <input  v-model="p.wulijingtong" placeholder="武器精通百分比" type="text" />
+    </template>
+    <input v-else-if="this.atkType == 'duli'" v-model="p.Mduli" placeholder="独立攻击" type="text" />
+    <input v-model="p.shuxingqianghua" placeholder="属性强化" type="text" />
+    <input v-model="p.baizi" placeholder="白字" type="text" />
+    <input v-model="p.huangzi" placeholder="黄字" type="text" />
+    <input v-model="p.baoshang" placeholder="爆伤" type="text" />
+    <input v-model="p.suoyougongji" placeholder="所有攻击" type="text" />
+    <input v-model="p.jinenggongji" placeholder="技能攻击" type="text" />
+    <select v-model="atkType">
+        <option v-for="atkType in atkTypes" v-bind:value="atkType.value" v-bind:selected="atkType.selected">
+            {{atkType.text}}
+        </option>
+    </select>
+    <div>atkType : {{atkType}}</div>
+    <input type="submit" @click="cacu" value="计算" />
+    <div>{{res}}</div>
+</div>
 
 </body>
 </html>
