@@ -85,18 +85,38 @@
                 }
             });
 
-            vm.show();
-
     	    var layerList = [];
     	    var width = 0;
     	    var height = 0;
-    	    $('<img/>').attr('src', 'images/test.jpg').load(function() {
-                width = this.width;
-                height = this.height;
-                $('#myCanvasDiv').css({
-                    width:1400,
-                    height:800,
+    	    var monsterNum = 0;
+            var el = $('#myCanvas');
+
+    	    var animateLayerList = function(el) {
+                layerList.forEach(function(e){
+                    $(el).animateLayer(e.layer.name, {visible:true, x:layer.eventX,y:layer.eventY}, 0);
                 });
+            };
+
+    	    var addMonster = function() {
+                var imageBlock = ImageBlock.instance();
+                imageBlock.set({
+                    source: 'images/mouseadd.png',
+                    name:'imageImage' + monsterNum++,
+                    x: 0,
+                    y: 0,
+                    width:50,
+                    height:50,
+                    visible:false,
+                    click:function(layer) {
+                        //$(this).animateLayer(tipsBlock.layer.name, {visible:true,scale:0,x:layer.eventX,y:layer.eventY}, 0)
+                        //.animateLayer(tipsBlock.layer.name, {scale:1,width:tipsBlock.layer.totalWidth, height:tipsBlock.layer.totalHeight}, 1000);
+                    }
+                });
+                el.addLayer(imageBlock.layer);
+                return imageBlock;
+            };
+
+    	    var addBackGroundImageBlock = function(width, height) {
                 var backBlock = ImageBlock.instance();
                 backBlock.set({
                     source: 'images/test.jpg',
@@ -107,66 +127,42 @@
                     height:height,
                     visible:true,
                     click:function(layer) {
-                        $(this).animateLayer(imageBlock.layer.name, {visible:true, x:layer.eventX,y:layer.eventY}, 0);
+                        addMonster();
+                        $(this).animateLayer(el.getLayer(-1).name, {visible:true, x:layer.eventX,y:layer.eventY}, 0);
                     }
                 });
-
-                var imageBlock = ImageBlock.instance();
-                imageBlock.set({
-                    source: 'images/mouseadd.png',
-                    name:'imageImage',
-                    x: 0,
-                    y: 0,
-                    width:50,
-                    height:50,
-                    visible:false,
-                    click:function(layer) {
-                        $(this).animateLayer(tipsBlock.layer.name, {visible:true,scale:0,x:layer.eventX,y:layer.eventY}, 0)
-                            //.animateLayer(tipsBlock.layer.name, {scale:1,width:tipsBlock.layer.totalWidth, height:tipsBlock.layer.totalHeight}, 1000);
-                    }
-                });
-
-                var tipsBlock = ImageBlock.instance();
-                tipsBlock.set({
-                    type:'text',
-                    name:'tipsImage',
-                    fillStyle: '#9cf',
-                    strokeStyle: '#25a',
-                    strokeWidth: 2,
-                    fontSize: 48,
-                    fontFamily: 'Verdana, sans-serif',
-                    text: 'Hello',
-                    x: 0,
-                    y: 0,
-                    width:0,
-                    height:0,
-                    totalWidth:300,
-                    totalHeight:300,
-                    visible:false,
-                    click:function() {
-
-                    }
-                });
-
                 layerList.push(backBlock);
-                layerList.push(imageBlock);
-                layerList.push(tipsBlock);
+            };
 
-                //imageBlock.show(100, 100);
-                $('#myCanvas').attr({
+    	    var init = function() {
+
+    	        el.clearCanvas();
+
+                layerList.forEach(function(e) {
+                    el.addLayer(e.layer);
+                });
+
+                el.drawLayers();
+            };
+
+    	    $('<img/>').attr('src', 'images/test.jpg').load(function() {
+                width = this.width;
+                height = this.height;
+                $('#myCanvasDiv').css({
+                    width:1400,
+                    height:800
+                });
+
+                addBackGroundImageBlock(width, height);
+
+                var el = $('#myCanvas').attr({
                     'width':width,
                     'height':height
-                }).addLayer(backBlock.layer)
-                    .addLayer(imageBlock.layer)
-                    .addLayer(tipsBlock.layer)
-                    .drawLayers();
+                });
 
-                //$('#myCanvas').getCanvasImage('jpeg');
+                init();
+
             });
-    		//$.idcode.setCode();
-    		//$("#submitForm").click(function(){
-    		//	alert($.idcode.validateCode());
-    		//});
 
     	});
     </script>
