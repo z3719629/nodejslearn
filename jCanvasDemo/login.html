@@ -14,38 +14,30 @@
     <script src="jquery.idcode.js" type="text/javascript"></script>
     <script type="text/javascript">
         // 状态类
-        var Event = {
-            instance:function() {
-                var instance = {};
-                instance.o = $({});
-                instance.bind = function() {
-                    instance.o.bind.apply(instance.o, arguments);
-                };
-                instance.trigger = function() {
-                    instance.o.trigger.apply(instance.o, arguments);
-                };
-                return instance;
-            }
+        var Event = function() {
+            this.o = $({});
+        };
+        Event.prototype.bind = function() {
+            this.o.bind.apply(this.o, arguments);
+        };
+        Event.prototype.trigger = function() {
+            this.o.trigger.apply(this.o, arguments);
         };
         // 状态机
-        var StateMachine = {
-            instance:function() {
-                var instance = {};
-                instance.event = Event.instance();
-                instance.add = function(controller) {
-                    this.event.bind('aa', function(e, con) {
-                        if(con == controller) {
-                            controller.selected();
-                        } else {
-                            controller.deselected();
-                        }
-                    });
-                    controller.select = $.proxy(function() {
-                        this.event.trigger('aa', controller);
-                    },this);
-                };
-                return instance;
-            }
+        var StateMachine = function() {
+            this.event = new Event();
+        };
+        StateMachine.prototype.add = function(controller) {
+            this.event.bind('aa', function(e, conn) {
+                if(conn == controller) {
+                    controller.selected();
+                } else {
+                    controller.deselected();
+                }
+            });
+            controller.select = $.proxy(function() {
+                this.event.trigger('aa', controller);
+            }, this);
         };
 
         var ImageBlock = {
@@ -69,16 +61,28 @@
             var vm = new Vue({
                 el: "#content",
                 data: {
-                    width:100,
-                    height:100,
+                    width:200,
+                    height:300,
                     x:0,
                     y:0,
                     display:'block',
-                    backcolor:'red'
+                    backcolor:'red',
+                    layer:''
                 },
                 methods: {
-                    show:function() {
-                        console.log($("#content").fadeOut(1000));
+                    show:function(x, y) {
+                        console.log("vm show excute");
+                        this.x = x;
+                        this.y = y;
+                        $("#content").hide().show(500);
+                    },
+                    hide:function() {
+                        console.log("vm hide excute");
+                        $("#content").show().hide(500);
+                    },
+                    delete:function() {
+                        event.trigger('closeContent', this.layer);
+                        this.hide();
                     }
                 }
             });
@@ -88,12 +92,42 @@
     	    var height = 0;
     	    var monsterNum = 0;
             var el = $('#myCanvas');
-
-    	    var animateLayerList = function(el) {
-                layerList.forEach(function(e){
-                    $(el).animateLayer(e.layer.name, {visible:true, x:layer.eventX,y:layer.eventY}, 0);
-                });
+            var editable = false;
+            // 事件类
+            var event = new Event();
+            // 状态机
+            var state = new StateMachine();
+            var edit = {
+                selected : function() {
+                    console.log("selected edit");
+                    editable = true;
+                },
+                deselected : function() {
+                    console.log("deselected edit");
+                }
             };
+            var end = {
+                selected : function() {
+                    editable = false;
+                    console.log("selected end");
+                },
+                deselected : function() {
+                    console.log("deselected end");
+                }
+            };
+            state.add(edit);
+            state.add(end);
+
+            // 绑定自定义事件
+            event.bind('animateLayerList', function(e) {
+                layerList.forEach(function(e){
+                    $(el).animateLayer(e.layer.name, {visible:true, x:layer.eventX, y:layer.eventY}, 0);
+                });
+            });
+
+            event.bind('closeContent', function(e,layer) {
+                $(el).animateLayer(layer.name, {visible:false}, 0);
+            });
 
     	    var addMonster = function() {
                 var imageBlock = ImageBlock.instance();
@@ -106,6 +140,9 @@
                     height:50,
                     visible:false,
                     click:function(layer) {
+                        console.log(layer.eventX);
+                        vm.layer = layer;
+                        vm.show(layer.eventX, layer.eventY);
                         //$(this).animateLayer(tipsBlock.layer.name, {visible:true,scale:0,x:layer.eventX,y:layer.eventY}, 0)
                         //.animateLayer(tipsBlock.layer.name, {scale:1,width:tipsBlock.layer.totalWidth, height:tipsBlock.layer.totalHeight}, 1000);
                     }
@@ -125,8 +162,10 @@
                     height:height,
                     visible:true,
                     click:function(layer) {
-                        addMonster();
-                        $(this).animateLayer(el.getLayer(-1).name, {visible:true, x:layer.eventX,y:layer.eventY}, 0);
+                        if(editable) {
+                            addMonster();
+                            $(this).animateLayer(el.getLayer(-1).name, {visible:true, x:layer.eventX,y:layer.eventY}, 0);
+                        }
                     }
                 });
                 layerList.push(backBlock);
@@ -159,6 +198,13 @@
                 });
 
                 init();
+
+                $("#add").click(function() {
+                    edit.select();
+                });
+                $("#cancel").click(function() {
+                    end.select();
+                });
             });
     	});
     </script>
@@ -172,8 +218,12 @@
          <div style="margin-top: 10px;"><input type="button" value="取消" class="smy_dl_login" id="cancel"/></div>
         <div id="myCanvasDiv" style="position:relative;overflow:auto">
             <canvas id="myCanvas" v-bind:style="position: absolute; z-index:0;"></canvas>
-            <div id="content" v-bind:style="{ position: 'absolute', 'z-index':'10', 'background-color':backcolor, width:width + 'px', height:height + 'px', left:x, top:y, display:display }">
-
+            <div id="content" v-bind:style="{ position: 'absolute', 'z-index':'10', 'background-color':backcolor, width:width + 'px', height:height + 'px', left:x + 'px', top:y + 'px', display:display }">
+                <img src="images/mouseadd.png" width="100px" height="100px"/>
+                <div align="right">
+                    <button @click="this.delete">删除标记</button>
+                </div>
+                <button @click="this.hide">关闭tips</button>
             </div>
         </div>
 
