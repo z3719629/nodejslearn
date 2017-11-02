@@ -65,24 +65,55 @@
                     height:300,
                     x:0,
                     y:0,
-                    display:'block',
+                    display:'none',
                     backcolor:'red',
-                    layer:''
+                    layer:'',
+                    onself:false
                 },
                 methods: {
                     show:function(x, y) {
                         console.log("vm show excute");
-                        this.x = x;
-                        this.y = y;
-                        $("#content").hide().show(500);
+
+                        if($("#content").is(":hidden")) {
+                            this.x = x;
+                            this.y = y;
+                            $("#content").show(500);
+                        } else {
+                            this.x = x;
+                            this.y = y;
+                            $("#content").hide().show(500);
+                        }
                     },
                     hide:function() {
                         console.log("vm hide excute");
-                        $("#content").show().hide(500);
+
+                        if($("#content").is(":visible")) {
+                            $("#content").hide(500);
+                        } else {
+                            $("#content").show().hide(500);
+                        }
                     },
                     delete:function() {
                         event.trigger('closeContent', this.layer);
                         this.hide();
+                    },
+                    onmouseover:function() {
+                        console.log("onmouseover");
+                        this.onself = true;
+                    },
+                    onmouseout:function() {
+                        console.log("onmouseout");
+                        this.onself = false;
+                    },
+                    onmousemove:function(e) {
+                        console.log(e);
+                    },
+                    checkOnself:function() {
+                        var onself = true;
+                        if(x<this.x || x>this.x+this.width || y<this.y || y>this.y+this.height) {
+                            onself = false;
+                        }
+                        return onself;
                     }
                 }
             });
@@ -145,6 +176,9 @@
                         vm.show(layer.eventX, layer.eventY);
                         //$(this).animateLayer(tipsBlock.layer.name, {visible:true,scale:0,x:layer.eventX,y:layer.eventY}, 0)
                         //.animateLayer(tipsBlock.layer.name, {scale:1,width:tipsBlock.layer.totalWidth, height:tipsBlock.layer.totalHeight}, 1000);
+                    },
+                    mouseout:function(layer) {
+                        //vm.hide(layer.eventX, layer.eventY);
                     }
                 });
                 el.addLayer(imageBlock.layer);
@@ -218,7 +252,7 @@
          <div style="margin-top: 10px;"><input type="button" value="取消" class="smy_dl_login" id="cancel"/></div>
         <div id="myCanvasDiv" style="position:relative;overflow:auto">
             <canvas id="myCanvas" v-bind:style="position: absolute; z-index:0;"></canvas>
-            <div id="content" v-bind:style="{ position: 'absolute', 'z-index':'10', 'background-color':backcolor, width:width + 'px', height:height + 'px', left:x + 'px', top:y + 'px', display:display }">
+            <div id="content" @mouseover="this.onmouseover" @mouseout="this.onmouseout" v-bind:style="{ position: 'absolute', 'z-index':'10', 'background-color':backcolor, width:width + 'px', height:height + 'px', left:x + 'px', top:y + 'px', display:display }">
                 <img src="images/mouseadd.png" width="100px" height="100px"/>
                 <div align="right">
                     <button @click="this.delete">删除标记</button>
