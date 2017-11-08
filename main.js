@@ -8,6 +8,9 @@ var app = express();
 var exec = require('child_process').exec;
 var cmdStr = 'ipconfig';
 
+var binaryEncoding = 'binary';
+var iconv = require('iconv-lite');
+
 
 
 //app.set('view engine', 'jade'); // 设置模板引擎
@@ -17,7 +20,7 @@ app.get('/', function(request, response) {
     var res = request.get("X-Requested-With");
     //response.render('template/index.jade');
 
-    exec(cmdStr, function(err,stdout,stderr){
+    exec(cmdStr, { encoding: binaryEncoding }, function(err,stdout,stderr){
         if(err) {
             console.log('get weather api error:'+stderr);
         } else {
@@ -28,7 +31,9 @@ app.get('/', function(request, response) {
             //var data = JSON.parse(stdout);
             //var str = iconv.decode(stdout, 'GBK');
             //console.log("成功" +stdout);
-            response.send('<textarea>' + stdout + '</textarea>');
+            var res = iconv.decode(new Buffer(stdout, binaryEncoding), 'cp936');
+            console.log(res);
+            response.send('<textarea>' + res + '</textarea>');
         }
     });
 });
