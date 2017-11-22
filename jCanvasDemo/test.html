@@ -15,6 +15,11 @@
             height: 30px;
             font-size:20px;
         }
+        .cssDisplayInline, .cssDisplayInline > * {
+            display:inline-block;
+            padding:0.5%;
+            vertical-align: top;
+        }
     </style>
     <script type="text/javascript">
         String.prototype.add = function(num) {
@@ -30,38 +35,43 @@
         // *(1+技能攻击力)*(1+属强/220)*(1+一般白字+属性白字*(1+属强/220))
         // *(1+技能等级提升伤害率)*(1+无视防御)
         $().ready(function () {
-            var vm = new Vue({
-                el:'#content',
-                data:{
-                    p: {
-                        // 智力
-                        Int:'',
-                        // 智力百分比增加
-                        IntPersent:'',
-                        // 魔法攻击
-                        Matk:'',
-                        // 属性强化
-                        shuxingqianghua:'',
-                        // 独立攻击
-                        Mduli:'',
-                        //武器精通
-                        wuqijingtong:'',
-                        // 白字
-                        baizi:'',
-                        // 黄字
-                        huangzi:'',
-                        // 爆伤
-                        baoshang:'',
-                        // 所有攻击
-                        suoyougongji:'',
-                        // 技能攻击
-                        jinenggongji:''
-                    },
-                    atkTypes: [
-                        {text:'百分比', value:'baifenbi'},
-                        {text:'独立', value:'duli'},
-                    ],
-                    atkType: 'baifenbi'
+
+            Vue.component('my-component', {
+                // 选项
+                template: '#mainComponent',
+                data: function() {
+                    return {
+                        p: {
+                            // 智力
+                            Int:'',
+                            // 智力百分比增加
+                            IntPersent:'',
+                            // 魔法攻击
+                            Matk:'',
+                            // 属性强化
+                            shuxingqianghua:'',
+                            // 独立攻击
+                            Mduli:'',
+                            //武器精通
+                            wuqijingtong:'',
+                            // 白字
+                            baizi:'',
+                            // 黄字
+                            huangzi:'',
+                            // 爆伤
+                            baoshang:'',
+                            // 所有攻击
+                            suoyougongji:'',
+                            // 技能攻击
+                            jinenggongji:''
+                        },
+                        atkTypes: [
+                            {text:'百分比', value:'baifenbi'},
+                            {text:'独立', value:'duli'},
+                        ],
+                        atkType: 'baifenbi',
+                        toggle: false
+                    };
                 },
                 computed: {
                     cWuqijingtong: function() {
@@ -94,47 +104,103 @@
                             //r * 基础魔攻
                             r *= this.p.Matk;
                         }
-                        console.log(this.cWuqijingtong);
                         r *= (this.cWuqijingtong||1);
                         r *= ((1+this.p.baizi/100)||1) * ((1+this.p.huangzi/100)||1) * ((1+this.p.baoshang/100)||1) * (1+this.p.shuxingqianghua/220||1);
 
-                        return r===0?'':r;
+                        return r;
                     }
                 },
                 methods: {
-                    cacu:function() {
-
+                    compare:function() {
+                        // 没用
+                        alert('component compare');
+                    },
+                    checkClick: function() {
+                        this.$emit('increment', this.toggle);
                     }
                 }
-
             });
+
+            // 创建根实例
+            var vm = new Vue({
+                el: '#content',
+                data: {
+                    components: [],
+                    cssDisplay: 'cssDisplayInline'
+                },
+                methods: {
+                    add: function(name) {
+                        this.components.push({name:name, index:this.components.length, checked: false});
+                    },
+                    compare: function() {
+                        // 获取所有已选中的组件
+                        $.each(this.components, function(i, n) {
+                            if(n.checked) {
+                                // 已选中的组件进行操作
+                                console.log(n.index);
+                            }
+                        });
+                    },
+                    incrementTotal: function(checked, component) {
+                        // 选中复选框添加到对比
+                        $.each(this.components, function(i, n) {
+                            if(n.index == component.index) {
+                                // 更新状态
+                                n.checked = checked;
+                            }
+                        });
+                    }
+                },
+                mounted: function() {
+                    this.add('my-component');
+                }
+            });
+
         });
+    </script>
+
+
+    <!-- Vue 模板 -->
+    <script type="text/x-template" id="mainComponent">
+        <div>
+            <input v-model="p.Int" type="text" placeholder="力量/智力" />
+            <input v-model="p.IntPersent" placeholder="力量/智力百分比增加" type="text" />
+            <input v-model="p.Matk" placeholder="物理/魔法攻击" type="text" :disabled="this.atkType == 'duli'" />
+            <input v-model="p.wuqijingtong" placeholder="武器精通百分比" type="text" :disabled="this.atkType == 'duli'" />
+            <input v-model="p.Mduli" placeholder="独立攻击" type="text" :disabled="this.atkType == 'baifenbi'" />
+            <input v-model="p.shuxingqianghua" placeholder="属性强化" type="text" />
+            <input v-model="p.baizi" placeholder="白字" type="text" />
+            <input v-model="p.huangzi" placeholder="黄字" type="text" />
+            <input v-model="p.baoshang" placeholder="爆伤" type="text" />
+            <input v-model="p.suoyougongji" placeholder="所有攻击" type="text" />
+            <input v-model="p.jinenggongji" placeholder="技能攻击" type="text" />
+            <select v-model="atkType">
+                <option v-for="atkType in atkTypes" v-bind:value="atkType.value" v-bind:selected="atkType.selected">
+                    {{atkType.text}}
+                </option>
+            </select>
+            <div>atkType : {{atkType}} toggle: {{toggle}}</div>
+            <input type="checkbox" v-model="toggle" @click="checkClick" value="对比" />
+            <div>计算结果：{{res}}</div>
+            <div>武器精通{{cWuqijingtong}}</div>
+        </div>
     </script>
 </head>
 <body>
-<div id="content" width="10">
-    <input v-model="p.Int" type="text" placeholder="力量/智力" />
-    <input v-model="p.IntPersent" placeholder="力量/智力百分比增加" type="text" />
-    <template v-if="this.atkType == 'baifenbi'">
-        <input  v-model="p.Matk" placeholder="物理/魔法攻击" type="text" />
-        <input  v-model="p.wuqijingtong" placeholder="武器精通百分比" type="text" />
-    </template>
-    <input v-else-if="this.atkType == 'duli'" v-model="p.Mduli" placeholder="独立攻击" type="text" />
-    <input v-model="p.shuxingqianghua" placeholder="属性强化" type="text" />
-    <input v-model="p.baizi" placeholder="白字" type="text" />
-    <input v-model="p.huangzi" placeholder="黄字" type="text" />
-    <input v-model="p.baoshang" placeholder="爆伤" type="text" />
-    <input v-model="p.suoyougongji" placeholder="所有攻击" type="text" />
-    <input v-model="p.jinenggongji" placeholder="技能攻击" type="text" />
-    <select v-model="atkType">
-        <option v-for="atkType in atkTypes" v-bind:value="atkType.value" v-bind:selected="atkType.selected">
-            {{atkType.text}}
-        </option>
-    </select>
-    <div>atkType : {{atkType}}</div>
-    <input type="submit" @click="cacu" value="计算" />
-    <div>{{res}}</div>
-    <div>sdfdf{{p.wuqijingtong}}</div>
+
+<!-- html -->
+<div id="content">
+    <div>
+        <button @click="add('my-component')">添加</button>
+        <button @click="compare">对比</button>
+        <input type="text"/>
+    </div>
+    <div v-bind:class="[cssDisplay]">
+        <div v-for="component in components">
+            <label>{{component.checked}}</label>
+            <component :is="component.name" v-on:increment="incrementTotal($event, component)"></component>
+        </div>
+    </div>
 </div>
 
 </body>
