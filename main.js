@@ -6,7 +6,7 @@ var path = require('path');
 var express = require('express');
 var app = express();
 var exec = require('child_process').exec;
-var cmdStr = 'ipconfig';
+var cmdStr = 'erro';
 
 var binaryEncoding = 'binary';
 var iconv = require('iconv-lite');
@@ -21,8 +21,11 @@ app.get('/', function(request, response) {
     //response.render('template/index.jade');
 
     exec(cmdStr, { encoding: binaryEncoding }, function(err,stdout,stderr){
+        stdout = iconv.decode(new Buffer(stdout, binaryEncoding), 'cp936');
+        stderr = iconv.decode(new Buffer(stderr, binaryEncoding), 'cp936');
         if(err) {
             console.log('get weather api error:'+stderr);
+            response.send('<textarea>' + stderr + '</textarea>');
         } else {
             /*
              这个stdout的内容就是上面我curl出来的这个东西：
@@ -31,9 +34,9 @@ app.get('/', function(request, response) {
             //var data = JSON.parse(stdout);
             //var str = iconv.decode(stdout, 'GBK');
             //console.log("成功" +stdout);
-            var res = iconv.decode(new Buffer(stdout, binaryEncoding), 'cp936');
-            console.log(res);
-            response.send('<textarea>' + res + '</textarea>');
+
+            console.log(stdout);
+            response.send('<textarea>' + stdout + '</textarea>');
         }
     });
 });
